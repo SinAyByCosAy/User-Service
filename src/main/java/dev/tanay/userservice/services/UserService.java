@@ -4,4 +4,5 @@ import dev.tanay.userservice.models.User;
 
 public interface UserService {
     public void createUser(User user);
+    public void loginUser(User user);
 }

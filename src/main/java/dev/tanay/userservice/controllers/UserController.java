@@ -18,4 +18,9 @@ public class UserController {
         userService.createUser(user);
         return HttpStatus.CREATED;
     }
+    @PostMapping("/login")
+    public HttpStatus loginUser(@RequestBody User user){
+        userService.loginUser(user);
+        return HttpStatus.ACCEPTED;
+    }
 }
