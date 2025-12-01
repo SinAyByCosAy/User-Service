@@ -1,6 +1,7 @@
 package dev.tanay.userservice.services;
 
 import dev.tanay.userservice.dtos.UserDto;
+import dev.tanay.userservice.exceptions.NotFoundException;
 import dev.tanay.userservice.models.User;
 import dev.tanay.userservice.repositories.UserRepository;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,9 @@ public class UserServiceDB implements UserService{
     @Override
     public void loginUser(User user){
         User fetchUser = userRepository.findUserByEmail(user.getEmail());
+        if(!fetchUser.getPassword().equals(user.getPassword())){
+            throw new NotFoundException("Invalid Password");
+        }
     }
     @Override
     public void logoutUser(Long id){
