@@ -1,5 +1,6 @@
 package dev.tanay.userservice.services;
 
+import dev.tanay.userservice.dtos.UserDto;
 import dev.tanay.userservice.models.User;
 import dev.tanay.userservice.repositories.UserRepository;
 import org.springframework.stereotype.Service;
@@ -10,13 +11,23 @@ public class UserServiceDB implements UserService{
     public UserServiceDB(UserRepository userRepository){
         this.userRepository = userRepository;
     }
-    public void createUser(User user){
-        userRepository.createUser(user);
+    @Override
+    public UserDto createUser(User user){
+        userRepository.save(user);
+        UserDto createdUser = new UserDto();
+        setUserDto(createdUser, user);
+        return createdUser;
     }
+    @Override
     public void loginUser(User user){
-        String pwd = userRepository.getPassword(user.getEmail());
+        User fetchUser = userRepository.findUserByEmail(user.getEmail());
     }
+    @Override
     public void logoutUser(Long id){
-        userRepository.deleteUser(id);
+//        userRepository.deleteUser(id);
+    }
+    private void setUserDto(UserDto createdUser, User user){
+        createdUser.setId(user.getId());
+        createdUser.setEmail(user.getEmail());
     }
 }
