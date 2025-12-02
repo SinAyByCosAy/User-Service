@@ -4,6 +4,7 @@ import dev.tanay.userservice.dtos.LoggedInUserDto;
 import dev.tanay.userservice.dtos.UserDto;
 import dev.tanay.userservice.dtos.UserRequestDto;
 import dev.tanay.userservice.exceptions.NotFoundException;
+import dev.tanay.userservice.exceptions.ResourceAlreadyExistsException;
 import dev.tanay.userservice.models.Session;
 import dev.tanay.userservice.models.User;
 import dev.tanay.userservice.repositories.SessionRepository;
@@ -26,6 +27,8 @@ public class UserServiceDB implements UserService{
     @Override
     @Transactional
     public UserDto createUser(UserRequestDto userReq){
+        User checkUser = userRepository.findUserByEmail(userReq.getEmail());
+        if(checkUser != null) throw new ResourceAlreadyExistsException(userReq.getEmail() + " already exists, try login.");
         User newUser = new User();
         newUser.setEmail(userReq.getEmail());
         newUser.setPassword(userReq.getPassword());
