@@ -1,5 +1,6 @@
 package dev.tanay.userservice.services;
 
+import dev.tanay.userservice.dtos.LoggedInUserDto;
 import dev.tanay.userservice.dtos.UserDto;
 import dev.tanay.userservice.exceptions.NotFoundException;
 import dev.tanay.userservice.models.Session;
@@ -31,7 +32,7 @@ public class UserServiceDB implements UserService{
     }
     @Override
     @Transactional
-    public void loginUser(User user){
+    public LoggedInUserDto loginUser(User user){
         User fetchUser = userRepository.findUserByEmail(user.getEmail());
         if(!fetchUser.getPassword().equals(user.getPassword())){
             throw new NotFoundException("Invalid Password");
@@ -40,6 +41,7 @@ public class UserServiceDB implements UserService{
         newSession.setToken("kl1234pr" + getRandomNumberUsingNextInt(1, 1000));
         newSession.setUser(fetchUser);
         sessionRepository.save(newSession);
+        return getLoggedInUserDto(fetchUser, newSession);
     }
     @Override
     public void logoutUser(Long id){
@@ -48,6 +50,13 @@ public class UserServiceDB implements UserService{
     private void setUserDto(UserDto createdUser, User user){
         createdUser.setId(user.getId());
         createdUser.setEmail(user.getEmail());
+    }
+    private LoggedInUserDto getLoggedInUserDto(User fetchUser, Session newSession){
+        LoggedInUserDto loggedInUserDto = new LoggedInUserDto();
+        loggedInUserDto.setId(fetchUser.getId());
+        loggedInUserDto.setEmail(fetchUser.getEmail());
+        loggedInUserDto.setToken(newSession.getToken());
+        return loggedInUserDto;
     }
     private int getRandomNumberUsingNextInt(int min, int max) {
         Random random = new Random();

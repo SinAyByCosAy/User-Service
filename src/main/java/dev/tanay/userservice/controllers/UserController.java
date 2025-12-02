@@ -1,5 +1,6 @@
 package dev.tanay.userservice.controllers;
 
+import dev.tanay.userservice.dtos.LoggedInUserDto;
 import dev.tanay.userservice.dtos.UserDto;
 import dev.tanay.userservice.models.User;
 import dev.tanay.userservice.services.UserService;
@@ -24,9 +25,11 @@ public class UserController {
         );
     }
     @PostMapping("/login")
-    public HttpStatus loginUser(@RequestBody User user){
-        userService.loginUser(user);
-        return HttpStatus.ACCEPTED;
+    public ResponseEntity<LoggedInUserDto> loginUser(@RequestBody User user){
+        return new ResponseEntity<>(
+                userService.loginUser(user),
+                HttpStatus.ACCEPTED
+        );
     }
     @PostMapping("/logout/{id}")
     public HttpStatus logoutUser(@PathVariable Long id){
