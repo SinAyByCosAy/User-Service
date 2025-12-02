@@ -2,6 +2,7 @@ package dev.tanay.userservice.controllers;
 
 import dev.tanay.userservice.dtos.LoggedInUserDto;
 import dev.tanay.userservice.dtos.UserDto;
+import dev.tanay.userservice.dtos.UserRequestDto;
 import dev.tanay.userservice.models.User;
 import dev.tanay.userservice.services.UserService;
 import org.springframework.http.HttpStatus;
@@ -18,16 +19,16 @@ public class UserController {
         this.userService = userService;
     }
     @PostMapping("/users")
-    public ResponseEntity<UserDto> createUser(@RequestBody User user){
+    public ResponseEntity<UserDto> createUser(@RequestBody UserRequestDto userReq){
         return new ResponseEntity<>(
-                userService.createUser(user),
+                userService.createUser(userReq),
                 HttpStatus.CREATED
         );
     }
     @PostMapping("/login")
-    public ResponseEntity<LoggedInUserDto> loginUser(@RequestBody User user){
+    public ResponseEntity<LoggedInUserDto> loginUser(@RequestBody UserRequestDto userReq){
         return new ResponseEntity<>(
-                userService.loginUser(user),
+                userService.loginUser(userReq),
                 HttpStatus.ACCEPTED
         );
     }

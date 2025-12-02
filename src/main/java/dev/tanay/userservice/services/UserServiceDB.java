@@ -2,6 +2,7 @@ package dev.tanay.userservice.services;
 
 import dev.tanay.userservice.dtos.LoggedInUserDto;
 import dev.tanay.userservice.dtos.UserDto;
+import dev.tanay.userservice.dtos.UserRequestDto;
 import dev.tanay.userservice.exceptions.NotFoundException;
 import dev.tanay.userservice.models.Session;
 import dev.tanay.userservice.models.User;
@@ -24,17 +25,21 @@ public class UserServiceDB implements UserService{
     }
     @Override
     @Transactional
-    public UserDto createUser(User user){
-        userRepository.save(user);
-        UserDto createdUser = new UserDto();
-        setUserDto(createdUser, user);
-        return createdUser;
+    public UserDto createUser(UserRequestDto userReq){
+        User newUser = new User();
+        newUser.setEmail(userReq.getEmail());
+        newUser.setPassword(userReq.getPassword());
+        userRepository.save(newUser);
+
+        UserDto userResponse = new UserDto();
+        setUserDto(userResponse, newUser);
+        return userResponse;
     }
     @Override
     @Transactional
-    public LoggedInUserDto loginUser(User user){
-        User fetchUser = userRepository.findUserByEmail(user.getEmail());
-        if(!fetchUser.getPassword().equals(user.getPassword())){
+    public LoggedInUserDto loginUser(UserRequestDto userReq){
+        User fetchUser = userRepository.findUserByEmail(userReq.getEmail());
+        if(!fetchUser.getPassword().equals(userReq.getPassword())){
             throw new NotFoundException("Invalid Password");
         }
         Session newSession = new Session();
@@ -47,9 +52,9 @@ public class UserServiceDB implements UserService{
     public void logoutUser(Long id){
 //        userRepository.deleteUser(id);
     }
-    private void setUserDto(UserDto createdUser, User user){
-        createdUser.setId(user.getId());
-        createdUser.setEmail(user.getEmail());
+    private void setUserDto(UserDto userResponse, User newUser){
+        userResponse.setId(newUser.getId());
+        userResponse.setEmail(newUser.getEmail());
     }
     private LoggedInUserDto getLoggedInUserDto(User fetchUser, Session newSession){
         LoggedInUserDto loggedInUserDto = new LoggedInUserDto();
