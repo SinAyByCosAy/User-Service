@@ -49,8 +49,11 @@ public class UserServiceDB implements UserService{
         return getLoggedInUserDto(fetchUser, newSession);
     }
     @Override
-    public void logoutUser(Long id){
-//        userRepository.deleteUser(id);
+    @Transactional
+    public void logoutUser(LoggedInUserDto loggedInUserDto){
+        Session sessionActive = sessionRepository.findSessionByToken(loggedInUserDto.getToken());
+        if(sessionActive == null) throw new NotFoundException("Invalid Token, how are you even logged in?");
+        sessionRepository.deleteByToken(loggedInUserDto.getToken());
     }
     private void setUserDto(UserDto userResponse, User newUser){
         userResponse.setId(newUser.getId());

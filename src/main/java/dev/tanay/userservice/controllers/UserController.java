@@ -3,11 +3,9 @@ package dev.tanay.userservice.controllers;
 import dev.tanay.userservice.dtos.LoggedInUserDto;
 import dev.tanay.userservice.dtos.UserDto;
 import dev.tanay.userservice.dtos.UserRequestDto;
-import dev.tanay.userservice.models.User;
 import dev.tanay.userservice.services.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,9 +30,9 @@ public class UserController {
                 HttpStatus.ACCEPTED
         );
     }
-    @PostMapping("/logout/{id}")
-    public HttpStatus logoutUser(@PathVariable Long id){
-        userService.logoutUser(id);
+    @PostMapping("/logout")
+    public HttpStatus logoutUser(@RequestBody LoggedInUserDto loggedInUserDto){
+        userService.logoutUser(loggedInUserDto);
         return HttpStatus.OK;
     }
 }
