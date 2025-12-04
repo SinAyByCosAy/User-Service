@@ -15,11 +15,11 @@ import org.springframework.stereotype.Service;
 import java.util.Random;
 
 @Service
-public class UserServiceDB implements UserService{
+public class AuthServiceDB implements AuthService {
     private UserRepository userRepository;
     private final SessionRepository sessionRepository;
 
-    public UserServiceDB(UserRepository userRepository,
+    public AuthServiceDB(UserRepository userRepository,
                          SessionRepository sessionRepository){
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
