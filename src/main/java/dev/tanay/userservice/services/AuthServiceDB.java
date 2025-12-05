@@ -54,7 +54,7 @@ public class AuthServiceDB implements AuthService {
     @Override
     @Transactional
     public void logoutUser(LogoutRequestDto logoutRequestDto){
-        Session sessionActive = sessionRepository.findSessionByToken(logoutRequestDto.getToken());
+        Session sessionActive = sessionRepository.findSessionByTokenAndId(logoutRequestDto.getToken(), logoutRequestDto.getUserId());
         if(sessionActive == null) throw new NotFoundException("Invalid Token, how are you even logged in?");
         sessionRepository.deleteByToken(logoutRequestDto.getToken());
     }
@@ -67,9 +67,5 @@ public class AuthServiceDB implements AuthService {
         loggedInUserDto.setEmail(fetchUser.getEmail());
         loggedInUserDto.setToken(newSession.getToken());
         return loggedInUserDto;
-    }
-    private int getRandomNumberUsingNextInt(int min, int max) {
-        Random random = new Random();
-        return random.nextInt(max - min) + min;
     }
 }
