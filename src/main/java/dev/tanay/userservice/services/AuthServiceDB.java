@@ -9,6 +9,8 @@ import dev.tanay.userservice.repositories.SessionRepository;
 import dev.tanay.userservice.repositories.AuthRepository;
 import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
@@ -17,11 +19,13 @@ import java.util.Random;
 public class AuthServiceDB implements AuthService {
     private AuthRepository authRepository;
     private final SessionRepository sessionRepository;
+    private PasswordEncoder passwordEncoder;
 
     public AuthServiceDB(AuthRepository authRepository,
-                         SessionRepository sessionRepository){
+                         SessionRepository sessionRepository, PasswordEncoder passwordEncoder){
         this.authRepository = authRepository;
         this.sessionRepository = sessionRepository;
+        this.passwordEncoder = passwordEncoder;
     }
     @Override
     @Transactional
