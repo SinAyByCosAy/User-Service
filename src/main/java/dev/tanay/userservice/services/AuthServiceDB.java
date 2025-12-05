@@ -19,7 +19,7 @@ import java.util.Random;
 public class AuthServiceDB implements AuthService {
     private AuthRepository authRepository;
     private final SessionRepository sessionRepository;
-    private PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder; //interface for BCryptPasswordEncoder
 
     public AuthServiceDB(AuthRepository authRepository,
                          SessionRepository sessionRepository, PasswordEncoder passwordEncoder){
@@ -35,7 +35,7 @@ public class AuthServiceDB implements AuthService {
         User newUser = new User();
         newUser.setEmail(signUpRequestDto.getEmail());
         //need encryption here
-        newUser.setPassword(signUpRequestDto.getPassword());
+        newUser.setPassword(passwordEncoder.encode(signUpRequestDto.getPassword()));
         authRepository.save(newUser);
 
         UserDto userResponse = new UserDto();
