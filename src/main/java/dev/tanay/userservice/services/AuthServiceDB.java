@@ -8,6 +8,7 @@ import dev.tanay.userservice.models.User;
 import dev.tanay.userservice.repositories.SessionRepository;
 import dev.tanay.userservice.repositories.AuthRepository;
 import jakarta.transaction.Transactional;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
@@ -41,12 +42,11 @@ public class AuthServiceDB implements AuthService {
     @Transactional
     public LoggedInUserDto loginUser(LoginRequestDto loginRequestDto){
         User fetchUser = authRepository.findUserByEmail(loginRequestDto.getEmail());
-//        if(fetchUser == null) throw new NotFoundException("User doesn't exist.");
+        if(fetchUser == null) throw new NotFoundException("User doesn't exist.");
         //need to check encrypted password
         if(!fetchUser.getPassword().equals(loginRequestDto.getPassword())) throw new NotFoundException("Invalid Password");
         Session newSession = new Session();
-//        newSession.setToken(RandomStringUtils);
-        newSession.setToken("kl1234pr" + getRandomNumberUsingNextInt(1, 1000));
+        newSession.setToken(RandomStringUtils.randomAlphanumeric(30));
         newSession.setUser(fetchUser);
         sessionRepository.save(newSession);
         return getLoggedInUserDto(fetchUser, newSession);
