@@ -1,8 +1,6 @@
 package dev.tanay.userservice.controllers;
 
-import dev.tanay.userservice.dtos.LoggedInUserDto;
-import dev.tanay.userservice.dtos.UserDto;
-import dev.tanay.userservice.dtos.UserRequestDto;
+import dev.tanay.userservice.dtos.*;
 import dev.tanay.userservice.services.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,22 +17,22 @@ public class AuthController {
         this.authService = authService;
     }
     @PostMapping("/signup")
-    public ResponseEntity<UserDto> createUser(@RequestBody UserRequestDto userReq){
+    public ResponseEntity<UserDto> createUser(@RequestBody SignUpRequestDto signUpRequestDto){
         return new ResponseEntity<>(
-                authService.createUser(userReq),
+                authService.createUser(signUpRequestDto),
                 HttpStatus.CREATED
         );
     }
     @PostMapping("/login")
-    public ResponseEntity<LoggedInUserDto> loginUser(@RequestBody UserRequestDto userReq){
+    public ResponseEntity<LoggedInUserDto> loginUser(@RequestBody LoginRequestDto loginRequestDto){
         return new ResponseEntity<>(
-                authService.loginUser(userReq),
+                authService.loginUser(loginRequestDto),
                 HttpStatus.ACCEPTED
         );
     }
     @PostMapping("/logout")
-    public HttpStatus logoutUser(@RequestBody LoggedInUserDto loggedInUserDto){
-        authService.logoutUser(loggedInUserDto);
+    public HttpStatus logoutUser(@RequestBody LogoutRequestDto logoutRequestDto){
+        authService.logoutUser(logoutRequestDto);
         return HttpStatus.OK;
     }
 }

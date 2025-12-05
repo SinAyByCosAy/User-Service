@@ -3,11 +3,9 @@ package dev.tanay.userservice.dtos;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Set;
-
 @Getter
 @Setter
-public class UserDto {
+public class LoginRequestDto {
     private String email;
-    private Set<String> roles;
+    private String password;
 }

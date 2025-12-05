@@ -1,14 +1,12 @@
 package dev.tanay.userservice.services;
 
-import dev.tanay.userservice.dtos.LoggedInUserDto;
-import dev.tanay.userservice.dtos.UserDto;
-import dev.tanay.userservice.dtos.UserRequestDto;
+import dev.tanay.userservice.dtos.*;
 import dev.tanay.userservice.exceptions.NotFoundException;
 import dev.tanay.userservice.exceptions.ResourceAlreadyExistsException;
 import dev.tanay.userservice.models.Session;
 import dev.tanay.userservice.models.User;
 import dev.tanay.userservice.repositories.SessionRepository;
-import dev.tanay.userservice.repositories.UserRepository;
+import dev.tanay.userservice.repositories.AuthRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -16,23 +14,24 @@ import java.util.Random;
 
 @Service
 public class AuthServiceDB implements AuthService {
-    private UserRepository userRepository;
+    private AuthRepository authRepository;
     private final SessionRepository sessionRepository;
 
-    public AuthServiceDB(UserRepository userRepository,
+    public AuthServiceDB(AuthRepository authRepository,
                          SessionRepository sessionRepository){
-        this.userRepository = userRepository;
+        this.authRepository = authRepository;
         this.sessionRepository = sessionRepository;
     }
     @Override
     @Transactional
-    public UserDto createUser(UserRequestDto userReq){
-        User checkUser = userRepository.findUserByEmail(userReq.getEmail());
-        if(checkUser != null) throw new ResourceAlreadyExistsException(userReq.getEmail() + " already exists, try login.");
+    public UserDto createUser(SignUpRequestDto signUpRequestDto){
+        User checkUser = authRepository.findUserByEmail(signUpRequestDto.getEmail());
+        if(checkUser != null) throw new ResourceAlreadyExistsException(signUpRequestDto.getEmail() + " already exists, try login.");
         User newUser = new User();
-        newUser.setEmail(userReq.getEmail());
-        newUser.setPassword(userReq.getPassword());
-        userRepository.save(newUser);
+        newUser.setEmail(signUpRequestDto.getEmail());
+        //need encryption here
+        newUser.setPassword(signUpRequestDto.getPassword());
+        authRepository.save(newUser);
 
         UserDto userResponse = new UserDto();
         setUserDto(userResponse, newUser);
@@ -40,12 +39,13 @@ public class AuthServiceDB implements AuthService {
     }
     @Override
     @Transactional
-    public LoggedInUserDto loginUser(UserRequestDto userReq){
-        User fetchUser = userRepository.findUserByEmail(userReq.getEmail());
-        if(!fetchUser.getPassword().equals(userReq.getPassword())){
-            throw new NotFoundException("Invalid Password");
-        }
+    public LoggedInUserDto loginUser(LoginRequestDto loginRequestDto){
+        User fetchUser = authRepository.findUserByEmail(loginRequestDto.getEmail());
+//        if(fetchUser == null) throw new NotFoundException("User doesn't exist.");
+        //need to check encrypted password
+        if(!fetchUser.getPassword().equals(loginRequestDto.getPassword())) throw new NotFoundException("Invalid Password");
         Session newSession = new Session();
+//        newSession.setToken(RandomStringUtils);
         newSession.setToken("kl1234pr" + getRandomNumberUsingNextInt(1, 1000));
         newSession.setUser(fetchUser);
         sessionRepository.save(newSession);
@@ -53,13 +53,12 @@ public class AuthServiceDB implements AuthService {
     }
     @Override
     @Transactional
-    public void logoutUser(LoggedInUserDto loggedInUserDto){
-        Session sessionActive = sessionRepository.findSessionByToken(loggedInUserDto.getToken());
+    public void logoutUser(LogoutRequestDto logoutRequestDto){
+        Session sessionActive = sessionRepository.findSessionByToken(logoutRequestDto.getToken());
         if(sessionActive == null) throw new NotFoundException("Invalid Token, how are you even logged in?");
-        sessionRepository.deleteByToken(loggedInUserDto.getToken());
+        sessionRepository.deleteByToken(logoutRequestDto.getToken());
     }
     private void setUserDto(UserDto userResponse, User newUser){
-        userResponse.setId(newUser.getId());
         userResponse.setEmail(newUser.getEmail());
     }
     private LoggedInUserDto getLoggedInUserDto(User fetchUser, Session newSession){
