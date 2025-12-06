@@ -48,7 +48,7 @@ public class AuthServiceDB implements AuthService {
         User fetchUser = authRepository.findUserByEmail(loginRequestDto.getEmail());
         if(fetchUser == null) throw new NotFoundException("User doesn't exist.");
         //need to check encrypted password
-        if(!fetchUser.getPassword().equals(loginRequestDto.getPassword())) throw new NotFoundException("Invalid Password");
+        if(!passwordEncoder.matches(loginRequestDto.getPassword(), fetchUser.getPassword())) throw new NotFoundException("Invalid Password");
         Session newSession = new Session();
         newSession.setToken(RandomStringUtils.randomAlphanumeric(30));
         newSession.setUser(fetchUser);
