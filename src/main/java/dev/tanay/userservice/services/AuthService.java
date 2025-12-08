@@ -1,6 +1,7 @@
 package dev.tanay.userservice.services;
 
 import dev.tanay.userservice.dtos.LoginRequestDto;
+import dev.tanay.userservice.dtos.LogoutRequestDto;
 import dev.tanay.userservice.dtos.SignupRequestDto;
 import org.springframework.stereotype.Service;
 
@@ -11,5 +12,8 @@ public class AuthService {
     }
     public void login(LoginRequestDto loginRequestDto){
         System.out.println(loginRequestDto.getEmail() + " " + loginRequestDto.getPassword());
+    }
+    public void logout(LogoutRequestDto logoutRequestDto){
+        System.out.println(logoutRequestDto.getUserId());
     }
 }

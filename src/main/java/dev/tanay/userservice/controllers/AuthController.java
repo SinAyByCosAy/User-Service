@@ -23,6 +23,6 @@ public class AuthController {
     }
     @PostMapping("/logout")
     public void logout(@RequestBody LogoutRequestDto logoutRequestDto){
-        System.out.println(logoutRequestDto.getUserId());
+        authService.logout(logoutRequestDto);
     }
 }
