@@ -19,7 +19,7 @@ public class AuthController {
     }
     @PostMapping("/login")
     public void login(@RequestBody LoginRequestDto loginRequestDto){
-        System.out.println(loginRequestDto.getEmail() + " " + loginRequestDto.getPassword());
+        authService.login(loginRequestDto);
     }
     @PostMapping("/logout")
     public void logout(@RequestBody LogoutRequestDto logoutRequestDto){
