@@ -1,10 +1,12 @@
 package dev.tanay.userservice.controllers;
 
-import dev.tanay.userservice.dtos.LoginRequestDto;
-import dev.tanay.userservice.dtos.LogoutRequestDto;
 import dev.tanay.userservice.dtos.SignupRequestDto;
+import dev.tanay.userservice.dtos.UserDto;
 import dev.tanay.userservice.services.AuthService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/auth")
@@ -14,15 +16,15 @@ public class AuthController {
         this.authService = authService;
     }
     @PostMapping("/signup")
-    public void signup(@RequestBody SignupRequestDto signupRequestDto){
-        authService.signup(signupRequestDto);
+    public UserDto signup(@RequestBody SignupRequestDto signupRequestDto){
+        return authService.signup(signupRequestDto);
     }
     @PostMapping("/login")
-    public void login(@RequestBody LoginRequestDto loginRequestDto){
-        authService.login(loginRequestDto);
+    public void login(){
+
     }
     @PostMapping("/logout")
-    public void logout(@RequestBody LogoutRequestDto logoutRequestDto){
-        authService.logout(logoutRequestDto);
+    public void logout(){
+
     }
 }
