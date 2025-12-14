@@ -1,18 +1,9 @@
 package dev.tanay.userservice.controllers;
 
-import dev.tanay.userservice.dtos.AuthResponseDto;
-import dev.tanay.userservice.dtos.LoginRequestDto;
-import dev.tanay.userservice.dtos.SignupRequestDto;
-import dev.tanay.userservice.dtos.UserDto;
+import dev.tanay.userservice.dtos.*;
 import dev.tanay.userservice.services.AuthService;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 
@@ -43,7 +34,23 @@ public class AuthController {
                 .body(authResponse.getUserDto());
     }
     @PostMapping("/logout")
-    public void logout(){
-
+    public ResponseEntity<Void> logout(@CookieValue(name = "auth_token", required = false) String token){
+        //we shouldn't require body from user for logout as token contains everything(JWT).
+        //validate token and add it to blocklist with remaining expiry as the TTL
+        //and reset cookie
+        //logout should simply logout if token is there, else exit. It shouldn't throw errors.
+        authService.logout(token);
+        ResponseCookie cookie = ResponseCookie
+                .from("auth_token", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(Duration.ofSeconds(0))
+                .sameSite("Lax")
+                .build();
+        return ResponseEntity
+                .noContent()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .build();
     }
 }
