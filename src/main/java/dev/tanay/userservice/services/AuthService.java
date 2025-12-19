@@ -36,8 +36,7 @@ public class AuthService {
         newUser.setPassword(passwordEncoder.encode(signupRequestDto.getPassword()));
         userRepository.save(newUser);
 
-        UserDto res = new UserDto();
-        res.setEmail(newUser.getEmail());
+        UserDto res = UserDto.from(newUser);
         return res;
     }
     @Transactional
@@ -56,11 +55,7 @@ public class AuthService {
         session.setExpiryAt(Instant.now().plus(Duration.ofHours(5)));
         sessionRepository.save(session);
 
-        UserDto res = new UserDto();
-        res.setEmail(checkUser.getEmail());
-        Set<String> roles = new HashSet<>();
-        for(Role role : checkUser.getRoles()) roles.add(role.getName());
-        res.setRoles(roles);
+        UserDto res = UserDto.from(checkUser);
 
         AuthResponseDto authResponse = new AuthResponseDto(res, token);
         return authResponse;
