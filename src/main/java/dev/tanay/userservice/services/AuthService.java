@@ -6,15 +6,17 @@ import dev.tanay.userservice.models.Session;
 import dev.tanay.userservice.models.User;
 import dev.tanay.userservice.repositories.SessionRepository;
 import dev.tanay.userservice.repositories.UserRepository;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.MacAlgorithm;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class AuthService {
@@ -45,19 +47,41 @@ public class AuthService {
         //throw error if user doesnt' exist
         if(!passwordEncoder.matches(loginRequestDto.getPassword(), checkUser.getPassword()))
             System.out.println("Haye rama");//throw error
+
         //logging a user means, creating a new session
-//        String token = RandomStringUtils.randomAlphanumeric(30);
         Session session = new Session();
-        String token = UUID.randomUUID().toString().replace("-","");
-        session.setToken(token);
+        // Create a test key suitable for the desired HMAC-SHA algorithm:
+        MacAlgorithm alg = Jwts.SIG.HS256; //or HS384 or HS256
+        SecretKey key = alg.key().build();
+
+        //need user_id, email, roles
+//        String message = "\"emailid\": \"tanay@gmail.com\",\n" +
+//                "    \"Role\": [\n" +
+//                "        \"student\",\n" +
+//                "        \"mentor\"\n" +
+//                "    ]";
+//        byte[] content = message.getBytes(StandardCharsets.UTF_8);
+        Instant now = Instant.now();
+        Map<String, Object> jsonForJwt = new HashMap<>();
+        jsonForJwt.put("email", checkUser.getEmail());
+        jsonForJwt.put("roles", checkUser.getRoles());
+
+// Create the compact JWS:
+        String jws = Jwts.builder()
+                .claims(jsonForJwt)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plus(Duration.ofHours(5))))
+                .signWith(key, alg)
+                .compact();
+
+        session.setToken(jws);
         session.setUser(checkUser);
         session.setActive(true);
-        session.setExpiryAt(Instant.now().plus(Duration.ofHours(5)));
+        session.setExpiryAt(now.plus(Duration.ofHours(5)));
         sessionRepository.save(session);
 
         UserDto res = UserDto.from(checkUser);
-
-        AuthResponseDto authResponse = new AuthResponseDto(res, token);
+        AuthResponseDto authResponse = new AuthResponseDto(res, jws);
         return authResponse;
     }
     @Transactional
