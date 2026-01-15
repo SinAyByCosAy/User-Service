@@ -67,21 +67,21 @@ public class AuthService {
         jsonForJwt.put("roles", checkUser.getRoles());
 
 // Create the compact JWS:
-        String jws = Jwts.builder()
+        String jwt = Jwts.builder()
                 .claims(jsonForJwt)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(Duration.ofHours(5))))
                 .signWith(key, alg)
                 .compact();
 
-        session.setToken(jws);
+        session.setToken(jwt);
         session.setUser(checkUser);
         session.setActive(true);
         session.setExpiryAt(now.plus(Duration.ofHours(5)));
         sessionRepository.save(session);
 
         UserDto res = UserDto.from(checkUser);
-        AuthResponseDto authResponse = new AuthResponseDto(res, jws);
+        AuthResponseDto authResponse = new AuthResponseDto(res, jwt);
         return authResponse;
     }
     @Transactional
