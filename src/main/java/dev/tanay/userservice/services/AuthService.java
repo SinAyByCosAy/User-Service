@@ -3,6 +3,7 @@ package dev.tanay.userservice.services;
 import dev.tanay.userservice.dtos.*;
 import dev.tanay.userservice.models.Role;
 import dev.tanay.userservice.models.Session;
+import dev.tanay.userservice.models.SessionStatus;
 import dev.tanay.userservice.models.User;
 import dev.tanay.userservice.repositories.SessionRepository;
 import dev.tanay.userservice.repositories.UserRepository;
@@ -54,13 +55,6 @@ public class AuthService {
         MacAlgorithm alg = Jwts.SIG.HS256; //or HS384 or HS256
         SecretKey key = alg.key().build();
 
-        //need user_id, email, roles
-//        String message = "\"emailid\": \"tanay@gmail.com\",\n" +
-//                "    \"Role\": [\n" +
-//                "        \"student\",\n" +
-//                "        \"mentor\"\n" +
-//                "    ]";
-//        byte[] content = message.getBytes(StandardCharsets.UTF_8);
         Instant now = Instant.now();
         Map<String, Object> jsonForJwt = new HashMap<>();
         jsonForJwt.put("email", checkUser.getEmail());
@@ -76,7 +70,7 @@ public class AuthService {
 
         session.setToken(jwt);
         session.setUser(checkUser);
-        session.setActive(true);
+        session.setStatus(SessionStatus.ACTIVE);
         session.setExpiryAt(now.plus(Duration.ofHours(5)));
         sessionRepository.save(session);
 
