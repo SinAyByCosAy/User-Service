@@ -80,16 +80,12 @@ public class AuthService {
     }
     @Transactional
     public void logout(String token){
-        //after this call user simply needs to be logged out, token should not be able to be reused after this
+        //after this call user simply needs to be logged out, token should not be reused after this
         //it could be that token is valid, invalid, expired, stolen, whatever
         //we shouldn't throw errors here, simply success
         if(token == null) return;
-        sessionRepository.findSessionByTokenAndIsActiveTrueAndExpiryAtAfter(token, Instant.now()) //this call is only needed if we need session for blocklist, otherwise directly delete
-                .ifPresent(session -> {
-                   Long id = session.getUser().getId();
-                   //add the token to blocklist here, use id to get expiry to set as TTL
-                    System.out.println("Blocking token: " + token);
-                   sessionRepository.deleteSessionByToken(token);
-                });
+        sessionRepository.updateStatus(token, SessionStatus.LOGGED_OUT);
+        //we shouldn't delete token as it will help in auditing later
+        //we can run a background job to move very old tokens to a different DB
     }
 }
