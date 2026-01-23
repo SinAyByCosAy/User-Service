@@ -1,13 +1,13 @@
 package dev.tanay.userservice.services;
 
 import dev.tanay.userservice.dtos.*;
-import dev.tanay.userservice.models.Role;
-import dev.tanay.userservice.models.Session;
-import dev.tanay.userservice.models.SessionStatus;
-import dev.tanay.userservice.models.User;
+import dev.tanay.userservice.models.*;
+import dev.tanay.userservice.repositories.JwtKeyRepository;
 import dev.tanay.userservice.repositories.SessionRepository;
 import dev.tanay.userservice.repositories.UserRepository;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.MacAlgorithm;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,10 +23,12 @@ import java.util.*;
 public class AuthService {
     private UserRepository userRepository;
     private SessionRepository sessionRepository;
+    private JwtKeyRepository jwtKeyRepository;
     private PasswordEncoder passwordEncoder;
-    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, PasswordEncoder passwordEncoder){
+    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, JwtKeyRepository jwtKeyRepository, PasswordEncoder passwordEncoder){
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
+        this.jwtKeyRepository = jwtKeyRepository;
         this.passwordEncoder = passwordEncoder;
     }
     @Transactional
@@ -87,5 +89,15 @@ public class AuthService {
         sessionRepository.updateStatus(token, SessionStatus.LOGGED_OUT);
         //we shouldn't delete token as it will help in auditing later
         //we can run a background job to move very old tokens to a different DB
+    }
+    public void insertSecret(){
+        MacAlgorithm alg = Jwts.SIG.HS256; //or HS384 or HS256
+        SecretKey key = alg.key().build();
+        String secretBase64 = Encoders.BASE64.encode(key.getEncoded());
+        JwtKeyEntity keyEntity = new JwtKeyEntity();
+        keyEntity.setAlgorithm("HmacSHA256");
+        keyEntity.setSecretBase64(secretBase64);
+        keyEntity.setActive(true);
+        jwtKeyRepository.save(keyEntity);
     }
 }

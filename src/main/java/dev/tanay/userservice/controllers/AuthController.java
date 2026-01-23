@@ -1,18 +1,27 @@
 package dev.tanay.userservice.controllers;
 
 import dev.tanay.userservice.dtos.*;
+import dev.tanay.userservice.models.JwtKeyEntity;
+import dev.tanay.userservice.repositories.JwtKeyRepository;
 import dev.tanay.userservice.services.AuthService;
+import io.jsonwebtoken.Jwt;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Encoders;
+import io.jsonwebtoken.security.MacAlgorithm;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import javax.crypto.SecretKey;
 import java.time.Duration;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
     private AuthService authService;
+    private JwtKeyRepository jwtKeyRepository;
     public AuthController(AuthService authService){
         this.authService = authService;
+        this.jwtKeyRepository = jwtKeyRepository;
     }
     @PostMapping("/signup")
     public UserDto signup(@RequestBody SignupRequestDto signupRequestDto){
@@ -52,5 +61,9 @@ public class AuthController {
                 .noContent()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .build();
+    }
+    @PostMapping()
+    public void insertSecret(){
+        authService.insertSecret();
     }
 }
