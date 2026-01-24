@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface JwtKeyRepository extends JpaRepository<JwtKeyEntity, Long> {
+    JwtKeyEntity findByActiveTrue();
 }

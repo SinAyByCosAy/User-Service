@@ -7,7 +7,9 @@ import dev.tanay.userservice.repositories.SessionRepository;
 import dev.tanay.userservice.repositories.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.io.Encoders;
+import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.MacAlgorithm;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -53,9 +55,11 @@ public class AuthService {
 
         //logging a user means, creating a new session
         Session session = new Session();
+        JwtKeyEntity keyEntity = jwtKeyRepository.findByActiveTrue();
         // Create a test key suitable for the desired HMAC-SHA algorithm:
-        MacAlgorithm alg = Jwts.SIG.HS256; //or HS384 or HS256
-        SecretKey key = alg.key().build();
+        MacAlgorithm alg = (MacAlgorithm) Jwts.SIG.get().get(keyEntity.getAlgorithm());
+        byte[] keyBytes = Decoders.BASE64.decode(keyEntity.getSecretBase64());
+        SecretKey key = Keys.hmacShaKeyFor(keyBytes);
 
         Instant now = Instant.now();
         Map<String, Object> jsonForJwt = new HashMap<>();
@@ -90,12 +94,18 @@ public class AuthService {
         //we shouldn't delete token as it will help in auditing later
         //we can run a background job to move very old tokens to a different DB
     }
+    @Transactional
     public void insertSecret(){
+        //Invalidate the old key
+        JwtKeyEntity oldKeyEntity = jwtKeyRepository.findByActiveTrue();
+        oldKeyEntity.setActive(false);
+
+        //creating new secret
         MacAlgorithm alg = Jwts.SIG.HS256; //or HS384 or HS256
         SecretKey key = alg.key().build();
         String secretBase64 = Encoders.BASE64.encode(key.getEncoded());
         JwtKeyEntity keyEntity = new JwtKeyEntity();
-        keyEntity.setAlgorithm("HmacSHA256");
+        keyEntity.setAlgorithm("HS256");
         keyEntity.setSecretBase64(secretBase64);
         keyEntity.setActive(true);
         jwtKeyRepository.save(keyEntity);
