@@ -7,14 +7,19 @@ import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
+
 @Entity
 @Getter
 @Setter
 public class JwtKeyEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    Long id;
-    String secretBase64;
-    String algorithm;
-    boolean active;
+    private Long id;
+    private String secretBase64;
+    private String algorithm;
+    private String kid;
+    private boolean active;
+    private Instant createdAt;
+    private Instant retiredAt;
 }

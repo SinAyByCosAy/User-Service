@@ -62,7 +62,8 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .build();
     }
-    @PostMapping()
+    //will never happen via a public endpoint, just for ease here
+    @PostMapping("/secret")
     public void insertSecret(){
         authService.insertSecret();
     }

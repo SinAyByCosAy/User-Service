@@ -96,9 +96,14 @@ public class AuthService {
     }
     @Transactional
     public void insertSecret(){
-        //Invalidate the old key
-        JwtKeyEntity oldKeyEntity = jwtKeyRepository.findByActiveTrue();
-        oldKeyEntity.setActive(false);
+        // Invalidate the old key?
+        // do we invalidate all active sessions signed with the old key?
+        // NO, that will be very poor design as a lot of users will be logged out.
+        // We need OVERLAPPING KEYS: A token can tell which key signed it
+        // Old Tokens -> verified with old key
+        // New Tokens -> verified with new key
+        // Then we retire the old key after TTL(max token lifetime + buffer)
+        // no valid token will reference it and no session breaks
 
         //creating new secret
         MacAlgorithm alg = Jwts.SIG.HS256; //or HS384 or HS256
