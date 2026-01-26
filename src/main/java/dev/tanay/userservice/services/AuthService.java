@@ -19,6 +19,9 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -113,6 +116,10 @@ public class AuthService {
         keyEntity.setAlgorithm("HS256");
         keyEntity.setSecretBase64(secretBase64);
         keyEntity.setActive(true);
+        String kid = "key-" + LocalDateTime.now(ZoneOffset.UTC)
+                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm"));
+        keyEntity.setKid(kid);
+        keyEntity.setCreatedAt(Instant.now());
         jwtKeyRepository.save(keyEntity);
     }
 }
