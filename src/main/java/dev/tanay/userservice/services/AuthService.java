@@ -116,10 +116,13 @@ public class AuthService {
         keyEntity.setAlgorithm("HS256");
         keyEntity.setSecretBase64(secretBase64);
         keyEntity.setActive(true);
-        String kid = "key-" + LocalDateTime.now(ZoneOffset.UTC)
-                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm"));
+        Instant now = Instant.now(); //UTC by default
+        String kid = "key-" + DateTimeFormatter
+                .ofPattern("yyyy-MM-dd-HH-mm")
+                        .withZone(ZoneOffset.UTC)
+                                .format(now);
         keyEntity.setKid(kid);
-        keyEntity.setCreatedAt(Instant.now());
+        keyEntity.setCreatedAt(now);
         jwtKeyRepository.save(keyEntity);
     }
 }

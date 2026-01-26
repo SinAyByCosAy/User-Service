@@ -14,7 +14,7 @@ import java.time.Instant;
 @Setter
 public class JwtKeyEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
     private String secretBase64;
     private String algorithm;
