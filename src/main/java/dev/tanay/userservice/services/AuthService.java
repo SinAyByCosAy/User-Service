@@ -58,8 +58,8 @@ public class AuthService {
 
         //logging a user means, creating a new session
         Session session = new Session();
-        JwtKeyEntity keyEntity = jwtKeyRepository.findByActiveTrue();
-        // Create a test key suitable for the desired HMAC-SHA algorithm:
+        JwtKeyEntity keyEntity = jwtKeyRepository.findTopByActiveTrueOrderByCreatedAtDesc();
+
         MacAlgorithm alg = (MacAlgorithm) Jwts.SIG.get().get(keyEntity.getAlgorithm());
         byte[] keyBytes = Decoders.BASE64.decode(keyEntity.getSecretBase64());
         SecretKey key = Keys.hmacShaKeyFor(keyBytes);
@@ -68,6 +68,7 @@ public class AuthService {
         Map<String, Object> jsonForJwt = new HashMap<>();
         jsonForJwt.put("email", checkUser.getEmail());
         jsonForJwt.put("roles", checkUser.getRoles());
+        jsonForJwt.put("kid", keyEntity.getKid());
 
 // Create the compact JWS:
         String jwt = Jwts.builder()
