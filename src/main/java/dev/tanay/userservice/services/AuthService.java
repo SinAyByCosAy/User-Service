@@ -72,6 +72,7 @@ public class AuthService {
 // Create the compact JWS:
         String jwt = Jwts.builder()
                 .claims(jsonForJwt)
+                .subject(checkUser.getId().toString())
                 .header()
                     .keyId(keyEntity.getKid())
                     .and()
@@ -104,6 +105,12 @@ public class AuthService {
         //we shouldn't delete token as it will help in auditing later
         //we can run a background job to move very old tokens to a different DB
     }
+//    @Transactional
+//    public SessionStatus validate(String token){
+//        if(token == null || token.isBlank()) return SessionStatus.INVALID;
+//
+//
+//    }
     @Transactional
     public void insertSecret(){
         // Invalidate the old key?
