@@ -1,5 +1,7 @@
 package dev.tanay.userservice.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.tanay.userservice.dtos.*;
 import dev.tanay.userservice.models.*;
 import dev.tanay.userservice.repositories.JwtKeyRepository;
@@ -24,17 +26,22 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 @Service
 public class AuthService {
     private UserRepository userRepository;
     private SessionRepository sessionRepository;
     private JwtKeyRepository jwtKeyRepository;
     private PasswordEncoder passwordEncoder;
-    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, JwtKeyRepository jwtKeyRepository, PasswordEncoder passwordEncoder){
+    private ObjectMapper objectMapper;
+
+    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, JwtKeyRepository jwtKeyRepository, PasswordEncoder passwordEncoder, ObjectMapper objectMapper){
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.jwtKeyRepository = jwtKeyRepository;
         this.passwordEncoder = passwordEncoder;
+        this.objectMapper = objectMapper;
     }
     @Transactional
     public UserDto signup(SignupRequestDto signupRequestDto){
@@ -105,12 +112,37 @@ public class AuthService {
         //we shouldn't delete token as it will help in auditing later
         //we can run a background job to move very old tokens to a different DB
     }
-//    @Transactional
-//    public SessionStatus validate(String token){
-//        if(token == null || token.isBlank()) return SessionStatus.INVALID;
-//
-//
-//    }
+    @Transactional
+    public SessionStatus validate(String token){
+        if(token == null || token.isBlank()) return SessionStatus.INVALID;
+        String[] parts = token.split("\\.");
+        if(parts.length != 3) return SessionStatus.INVALID;
+
+        JsonNode header;
+        try{
+            header = objectMapper.readTree(new String(Decoders.BASE64URL.decode(parts[0]), UTF_8));
+        }catch(Exception e){
+            return SessionStatus.INVALID;
+        }
+        String kid = header.path("kid").asText(null);
+        if(kid == null) return SessionStatus.INVALID;
+
+        JwtKeyEntity keyEntity = jwtKeyRepository.findByKid(kid)
+                .orElseThrow(null);
+
+        if(keyEntity.getRetiredAt() != null && keyEntity.getRetiredAt().isBefore((Instant.now()))) return SessionStatus.INVALID;
+
+        Claims claims;
+        try{
+            claims = Jwts.parser()
+                    .verifyWith(rebuildSecretKey(keyEntity))
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        }catch(Exception e){
+            return SessionStatus.INVALID;
+        }
+    }
     @Transactional
     public void insertSecret(){
         // Invalidate the old key?
@@ -138,5 +170,11 @@ public class AuthService {
         keyEntity.setKid(kid);
         keyEntity.setCreatedAt(now);
         jwtKeyRepository.save(keyEntity);
+    }
+    private SecretKey rebuildSecretKey(JwtKeyEntity keyEntity){
+        MacAlgorithm alg = (MacAlgorithm) Jwts.SIG.get().get(keyEntity.getAlgorithm());
+        byte[] keyBytes = Decoders.BASE64.decode(keyEntity.getSecretBase64());
+        SecretKey key = Keys.hmacShaKeyFor(keyBytes);
+        return key;
     }
 }
