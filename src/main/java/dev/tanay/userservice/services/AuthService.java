@@ -86,6 +86,8 @@ public class AuthService {
         session.setExpiryAt(now.plus(Duration.ofHours(5)));
         sessionRepository.save(session);
 
+        //Successful login -> add event to queue : for audit
+
         UserDto res = UserDto.from(checkUser);
         AuthResponseDto authResponse = new AuthResponseDto(res, jwt);
         return authResponse;
@@ -97,6 +99,8 @@ public class AuthService {
         //we shouldn't throw errors here, simply success
         if(token == null) return;
         sessionRepository.updateStatus(token, SessionStatus.LOGGED_OUT);//if token is not found, nothing happens
+
+        //Successful logout -> add event to queue : for audit
         //we shouldn't delete token as it will help in auditing later
         //we can run a background job to move very old tokens to a different DB
     }
