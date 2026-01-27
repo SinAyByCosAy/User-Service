@@ -66,10 +66,8 @@ public class AuthService {
         //logging a user means, creating a new session
         Session session = new Session();
         JwtKeyEntity keyEntity = jwtKeyRepository.findTopByActiveTrueOrderByCreatedAtDesc();
-
         MacAlgorithm alg = (MacAlgorithm) Jwts.SIG.get().get(keyEntity.getAlgorithm());
-        byte[] keyBytes = Decoders.BASE64.decode(keyEntity.getSecretBase64());
-        SecretKey key = Keys.hmacShaKeyFor(keyBytes);
+        SecretKey key = rebuildSecretKey(keyEntity);
 
         Instant now = Instant.now();
         Map<String, Object> jsonForJwt = new HashMap<>();
@@ -142,6 +140,7 @@ public class AuthService {
         }catch(Exception e){
             return SessionStatus.INVALID;
         }
+        return SessionStatus.ACTIVE;
     }
     @Transactional
     public void insertSecret(){
@@ -172,7 +171,6 @@ public class AuthService {
         jwtKeyRepository.save(keyEntity);
     }
     private SecretKey rebuildSecretKey(JwtKeyEntity keyEntity){
-        MacAlgorithm alg = (MacAlgorithm) Jwts.SIG.get().get(keyEntity.getAlgorithm());
         byte[] keyBytes = Decoders.BASE64.decode(keyEntity.getSecretBase64());
         SecretKey key = Keys.hmacShaKeyFor(keyBytes);
         return key;
