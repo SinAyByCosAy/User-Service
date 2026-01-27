@@ -68,11 +68,13 @@ public class AuthService {
         Map<String, Object> jsonForJwt = new HashMap<>();
         jsonForJwt.put("email", checkUser.getEmail());
         jsonForJwt.put("roles", checkUser.getRoles());
-        jsonForJwt.put("kid", keyEntity.getKid());
 
 // Create the compact JWS:
         String jwt = Jwts.builder()
                 .claims(jsonForJwt)
+                .header()
+                    .keyId(keyEntity.getKid())
+                    .and()
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(Duration.ofHours(5))))
                 .signWith(key, alg)
