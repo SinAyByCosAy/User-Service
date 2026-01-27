@@ -94,7 +94,7 @@ public class AuthService {
         //it could be that token is valid, invalid, expired, stolen, whatever
         //we shouldn't throw errors here, simply success
         if(token == null) return;
-        sessionRepository.updateStatus(token, SessionStatus.LOGGED_OUT);
+        sessionRepository.updateStatus(token, SessionStatus.LOGGED_OUT);//if token is not found, nothing happens
         //we shouldn't delete token as it will help in auditing later
         //we can run a background job to move very old tokens to a different DB
     }
