@@ -1,21 +1,23 @@
 package dev.tanay.userservice.services;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.tanay.userservice.dtos.*;
 import dev.tanay.userservice.models.*;
 import dev.tanay.userservice.repositories.JwtKeyRepository;
 import dev.tanay.userservice.repositories.SessionRepository;
 import dev.tanay.userservice.repositories.UserRepository;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.MacAlgorithm;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -116,30 +118,24 @@ public class AuthService {
         String[] parts = token.split("\\.");
         if(parts.length != 3) return SessionStatus.INVALID;
 
-        JsonNode header;
-        try{
-            header = objectMapper.readTree(new String(Decoders.BASE64URL.decode(parts[0]), UTF_8));
-        }catch(Exception e){
-            return SessionStatus.INVALID;
-        }
-        String kid = header.path("kid").asText(null);
-        if(kid == null) return SessionStatus.INVALID;
-
-        JwtKeyEntity keyEntity = jwtKeyRepository.findByKid(kid)
-                .orElseThrow(null);
-
-        if(keyEntity.getRetiredAt() != null && keyEntity.getRetiredAt().isBefore((Instant.now()))) return SessionStatus.INVALID;
-
         Claims claims;
         try{
             claims = Jwts.parser()
-                    .verifyWith(rebuildSecretKey(keyEntity))
+                    .keyLocator(header -> {
+                        String kid = (String) header.get("kid");
+                        return jwtKeyRepository.findByKid(kid)
+                                .map(this::rebuildSecretKey)
+                                .orElse(null);
+                    })
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
         }catch(Exception e){
             return SessionStatus.INVALID;
         }
+
+        if(claims.getSubject() == null) return SessionStatus.INVALID;
+        Long id = Long.parseLong(claims.getSubject());
         return SessionStatus.ACTIVE;
     }
     @Transactional
