@@ -113,10 +113,10 @@ public class AuthService {
         if(parts.length != 3) return SessionStatus.INVALID;
 
         Claims claims;
-        try{
+        try{ // token verification
             claims = Jwts.parser()
                     .keyLocator(header -> {
-                        String kid = (String) header.get("kid");
+                        String kid = (String) header.get("kid"); // pick the correct secret that signed it
                         return jwtKeyRepository.findByKid(kid)
                                 .map(this::rebuildSecretKey)
                                 .orElse(null);
@@ -124,7 +124,7 @@ public class AuthService {
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-        }catch(Exception e){
+        }catch(Exception e){ // verification failed
             System.out.println("Verification failed");
             return SessionStatus.INVALID;
         }
@@ -132,6 +132,7 @@ public class AuthService {
         Optional<Session> checkSession = sessionRepository.findSessionByToken(token);
         if(checkSession.isEmpty()) { System.out.println("Session not found for the token"); return SessionStatus.INVALID; }
 
+        // validating session
         Session session = checkSession.get();
         if(session.getStatus() != SessionStatus.ACTIVE)
             { System.out.println("Session Status is not active"); return session.getStatus(); }
@@ -142,6 +143,11 @@ public class AuthService {
         }
 
         if(claims.getSubject() == null) { System.out.println("No id in token"); return SessionStatus.INVALID; }
+
+        // no need to verify user details. A token is issued with user details.
+        // if token is verified then user details are correct.
+        // token won't be issued with wrong user details
+        // and corrupted token won't get verified
 
         return SessionStatus.ACTIVE;
     }
