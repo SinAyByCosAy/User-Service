@@ -2,6 +2,7 @@ package dev.tanay.userservice.controllers;
 
 import dev.tanay.userservice.dtos.*;
 import dev.tanay.userservice.models.JwtKeyEntity;
+import dev.tanay.userservice.models.SessionStatus;
 import dev.tanay.userservice.repositories.JwtKeyRepository;
 import dev.tanay.userservice.services.AuthService;
 import io.jsonwebtoken.Jwt;
@@ -66,5 +67,9 @@ public class AuthController {
     @PostMapping("/secret")
     public void insertSecret(){
         authService.insertSecret();
+    }
+    @PostMapping("/validate")
+    public SessionStatus validate(@CookieValue(name = "auth_token", required = false) String token){
+        return authService.validate(token);
     }
 }

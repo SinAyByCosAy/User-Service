@@ -6,29 +6,23 @@ import dev.tanay.userservice.repositories.JwtKeyRepository;
 import dev.tanay.userservice.repositories.SessionRepository;
 import dev.tanay.userservice.repositories.UserRepository;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.MacAlgorithm;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Service
 public class AuthService {
@@ -131,11 +125,24 @@ public class AuthService {
                     .parseSignedClaims(token)
                     .getPayload();
         }catch(Exception e){
+            System.out.println("Verification failed");
             return SessionStatus.INVALID;
         }
 
-        if(claims.getSubject() == null) return SessionStatus.INVALID;
-        Long id = Long.parseLong(claims.getSubject());
+        Optional<Session> checkSession = sessionRepository.findSessionByToken(token);
+        if(checkSession.isEmpty()) { System.out.println("Session not found for the token"); return SessionStatus.INVALID; }
+
+        Session session = checkSession.get();
+        if(session.getStatus() != SessionStatus.ACTIVE)
+            { System.out.println("Session Status is not active"); return session.getStatus(); }
+        if(session.getExpiryAt().isBefore(Instant.now())){
+            System.out.println("Session has expired");
+            session.setStatus(SessionStatus.EXPIRED);
+            return session.getStatus();
+        }
+
+        if(claims.getSubject() == null) { System.out.println("No id in token"); return SessionStatus.INVALID; }
+
         return SessionStatus.ACTIVE;
     }
     @Transactional
