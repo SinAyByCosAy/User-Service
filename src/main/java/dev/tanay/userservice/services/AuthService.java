@@ -159,11 +159,17 @@ public class AuthService {
         // New Tokens -> verified with new key
         // Then we retire the old key after TTL(max token lifetime + buffer)
         // no valid token will reference it and no session breaks
+
+        // Get the time of the last token issued(which will have used the old key)
+        // There will be only one active key - current architecture
         Instant latestSessionExpiry = sessionRepository
                 .findLatestSessionExpiry()
                 .orElse(Instant.now());
         Instant retiredAt = latestSessionExpiry.plus(Duration.ofMinutes(5));
 
+        // Set retiredAt value to old key and make set it as inactive
+        // Active tokens can still get validated against the retiredAt time
+        jwtKeyRepository.retireKey(retiredAt);
 
         //creating new secret
         MacAlgorithm alg = Jwts.SIG.HS256; //or HS384 or HS256
