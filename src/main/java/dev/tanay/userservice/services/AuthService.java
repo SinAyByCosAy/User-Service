@@ -30,14 +30,12 @@ public class AuthService {
     private SessionRepository sessionRepository;
     private JwtKeyRepository jwtKeyRepository;
     private PasswordEncoder passwordEncoder;
-    private ObjectMapper objectMapper;
 
     public AuthService(UserRepository userRepository, SessionRepository sessionRepository, JwtKeyRepository jwtKeyRepository, PasswordEncoder passwordEncoder, ObjectMapper objectMapper){
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.jwtKeyRepository = jwtKeyRepository;
         this.passwordEncoder = passwordEncoder;
-        this.objectMapper = objectMapper;
     }
     @Transactional
     public UserDto signup(SignupRequestDto signupRequestDto){
@@ -161,6 +159,11 @@ public class AuthService {
         // New Tokens -> verified with new key
         // Then we retire the old key after TTL(max token lifetime + buffer)
         // no valid token will reference it and no session breaks
+        Instant latestSessionExpiry = sessionRepository
+                .findLatestSessionExpiry()
+                .orElse(Instant.now());
+        Instant retiredAt = latestSessionExpiry.plus(Duration.ofMinutes(5));
+
 
         //creating new secret
         MacAlgorithm alg = Jwts.SIG.HS256; //or HS384 or HS256
