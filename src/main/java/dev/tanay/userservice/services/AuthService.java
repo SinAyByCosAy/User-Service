@@ -59,7 +59,7 @@ public class AuthService {
 
         //logging a user means, creating a new session
         Session session = new Session();
-        JwtKeyEntity keyEntity = jwtKeyRepository.findTopByActiveTrueOrderByCreatedAtDesc();
+        JwtKeyEntity keyEntity = jwtKeyRepository.findByActiveTrue(); // only one active key
         MacAlgorithm alg = (MacAlgorithm) Jwts.SIG.get().get(keyEntity.getAlgorithm());
         SecretKey key = rebuildSecretKey(keyEntity);
 
@@ -101,8 +101,8 @@ public class AuthService {
         sessionRepository.updateStatus(token, SessionStatus.LOGGED_OUT);//if token is not found, nothing happens
 
         //Successful logout -> add event to queue : for audit
-        //we shouldn't delete token as it will help in auditing later
-        //we can run a background job to move very old tokens to a different DB
+        //we shouldn't delete token as it will help in auditing later - not true, session will get invalidated in cache
+        //we can run a background job to move very old tokens to a different DB - don't need this
     }
     @Transactional
     public SessionStatus validate(String token){
@@ -115,15 +115,19 @@ public class AuthService {
             claims = Jwts.parser()
                     .keyLocator(header -> {
                         String kid = (String) header.get("kid"); // pick the correct secret that signed it
-                        return jwtKeyRepository.findByKid(kid)
-                                .map(this::rebuildSecretKey)
-                                .orElse(null);
+                        System.out.println(kid);
+                        JwtKeyEntity keyEntity = jwtKeyRepository.findByKid(kid)
+                                .orElseThrow(() -> new RuntimeException("Unknown key"));
+                        if(keyEntity.getRetiredAt() != null && keyEntity.getRetiredAt().isBefore(Instant.now()))
+                            throw new RuntimeException("Key has expired");
+
+                        return rebuildSecretKey(keyEntity);
                     })
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
         }catch(Exception e){ // verification failed
-            System.out.println("Verification failed");
+            System.out.println("Verification failed: " + e.getMessage());
             return SessionStatus.INVALID;
         }
 
@@ -169,7 +173,7 @@ public class AuthService {
 
         // Set retiredAt value to old key and make set it as inactive
         // Active tokens can still get validated against the retiredAt time
-        jwtKeyRepository.retireKey(retiredAt);
+        jwtKeyRepository.retireKey(retiredAt); // currently don't have a check for: if the key has already been retired(admin revocation), not needed right now
 
         //creating new secret
         MacAlgorithm alg = Jwts.SIG.HS256; //or HS384 or HS256
