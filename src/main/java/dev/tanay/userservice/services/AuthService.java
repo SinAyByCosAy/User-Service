@@ -119,7 +119,7 @@ public class AuthService {
                         JwtKeyEntity keyEntity = jwtKeyRepository.findByKid(kid)
                                 .orElseThrow(() -> new RuntimeException("Unknown key"));
                         if(keyEntity.getRetiredAt() != null && keyEntity.getRetiredAt().isBefore(Instant.now()))
-                            throw new RuntimeException("Key has expired");
+                            throw new RuntimeException("Key retired");
 
                         return rebuildSecretKey(keyEntity);
                     })
