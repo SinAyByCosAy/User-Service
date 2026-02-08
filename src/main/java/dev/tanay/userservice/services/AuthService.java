@@ -131,6 +131,8 @@ public class AuthService {
             return SessionStatus.INVALID;
         }
 
+        if(claims.getSubject() == null) { System.out.println("No id in token"); return SessionStatus.INVALID; }
+
         Optional<Session> checkSession = sessionRepository.findSessionByToken(token);
         if(checkSession.isEmpty()) { System.out.println("Session not found for the token"); return SessionStatus.INVALID; }
 
@@ -143,8 +145,6 @@ public class AuthService {
             session.setStatus(SessionStatus.EXPIRED);
             return session.getStatus();
         }
-
-        if(claims.getSubject() == null) { System.out.println("No id in token"); return SessionStatus.INVALID; }
 
         // no need to verify user details. A token is issued with user details.
         // if token is verified then user details are correct.
