@@ -19,10 +19,8 @@ import java.time.Duration;
 @RequestMapping("/auth")
 public class AuthController {
     private AuthService authService;
-    private JwtKeyRepository jwtKeyRepository;
     public AuthController(AuthService authService){
         this.authService = authService;
-        this.jwtKeyRepository = jwtKeyRepository;
     }
     @PostMapping("/signup")
     public UserDto signup(@RequestBody SignupRequestDto signupRequestDto){

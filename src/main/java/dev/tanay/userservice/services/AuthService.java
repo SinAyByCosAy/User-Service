@@ -164,7 +164,7 @@ public class AuthService {
         // Then we retire the old key after TTL(max token lifetime + buffer)
         // no valid token will reference it and no session breaks
 
-        // Get the time of the last token issued(which will have used the old key)
+        // Get the time of the last token issued(which will have used the current active key)
         // There will be only one active key - current architecture
         Instant latestSessionExpiry = sessionRepository
                 .findLatestSessionExpiry()
