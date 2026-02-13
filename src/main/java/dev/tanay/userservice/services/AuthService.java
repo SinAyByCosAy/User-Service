@@ -68,10 +68,13 @@ public class AuthService {
         jsonForJwt.put("email", checkUser.getEmail());
         jsonForJwt.put("roles", checkUser.getRoles());
 
+        UUID sessionId = UUID.randomUUID(); //generated session id
+
 // Create the compact JWS:
         String jwt = Jwts.builder()
                 .claims(jsonForJwt)
-                .subject(checkUser.getId().toString())
+                .id(sessionId.toString()) //session id
+                .subject(checkUser.getId().toString()) //user id
                 .header()
                     .keyId(keyEntity.getKid())
                     .and()
@@ -80,7 +83,7 @@ public class AuthService {
                 .signWith(key, alg)
                 .compact();
 
-        session.setToken(jwt);
+        session.setSessionId(sessionId); //setting session id
         session.setUser(checkUser);
         session.setStatus(SessionStatus.ACTIVE);
         session.setExpiryAt(now.plus(Duration.ofHours(5)));
@@ -171,7 +174,7 @@ public class AuthService {
                 .orElse(Instant.now());
         Instant retiredAt = latestSessionExpiry.plus(Duration.ofMinutes(5));
 
-        // Set retiredAt value to old key and make set it as inactive
+        // Set retiredAt value to old key and set it as inactive
         // Active tokens can still get validated against the retiredAt time
         jwtKeyRepository.retireKey(retiredAt); // currently don't have a check for: if the key has already been retired(admin revocation), not needed right now
 

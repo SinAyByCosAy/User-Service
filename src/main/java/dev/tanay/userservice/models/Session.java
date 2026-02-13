@@ -1,19 +1,18 @@
 package dev.tanay.userservice.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
-public class Session extends BaseModel{
-    private String token;
+public class Session{
+    @Id
+    private UUID sessionId;
     private Instant expiryAt;
     @Enumerated(EnumType.STRING)
     private SessionStatus status;
