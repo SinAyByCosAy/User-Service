@@ -11,16 +11,17 @@ import org.springframework.stereotype.Repository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface SessionRepository extends JpaRepository<Session, Long> {
-    Optional<Session> findSessionByToken(String token);
+public interface SessionRepository extends JpaRepository<Session, UUID> {
+    Optional<Session> findSessionBySessionId(UUID sessionId);
     @Transactional
     @Modifying
     @Query("""
-            update Session s set s.status = :status where s.token = :token
+            update Session s set s.status = :status where s.sessionId = :sessionId
                         """)
-    int updateStatus(String token, SessionStatus status);
+    int updateStatus(UUID sessionId, SessionStatus status);
 
     @Query("""
         select max(s.expiryAt)

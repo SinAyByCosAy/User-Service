@@ -100,12 +100,21 @@ public class AuthService {
         //after this call user simply needs to be logged out, token should not be reused after this
         //it could be that token is valid, invalid, expired, stolen, whatever
         //we shouldn't throw errors here, simply success
+        //no need to verify token as logout is not security-sensitive operation
         if(token == null) return;
-        sessionRepository.updateStatus(token, SessionStatus.LOGGED_OUT);//if token is not found, nothing happens
+        String[] parts = token.split("\\.");
+        if(parts.length < 3) return;
+        String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1])); //decode base64 string
+        ObjectMapper mapper = new ObjectMapper(); // To deserialize JSON to Java object
+        Map<String, Object> payload = mapper.readValue(payloadJson, Map.class);
+        String sessionId = (String) payload.get("jti");
+
+        if(sessionId == null || sessionId.isBlank()) return;
+
+        sessionRepository.updateStatus(UUID.fromString(sessionId), SessionStatus.LOGGED_OUT);//if token is not found, nothing happens
 
         //Successful logout -> add event to queue : for audit
-        //we shouldn't delete token as it will help in auditing later - not true, session will get invalidated in cache
-        //we can run a background job to move very old tokens to a different DB - don't need this
+        //session will get invalidated in cache
     }
     @Transactional
     public SessionStatus validate(String token){
@@ -136,7 +145,7 @@ public class AuthService {
 
         if(claims.getSubject() == null) { System.out.println("No id in token"); return SessionStatus.INVALID; }
 
-        Optional<Session> checkSession = sessionRepository.findSessionByToken(token);
+        Optional<Session> checkSession = sessionRepository.findSessionBySessionId(UUID.fromString(claims.getId()));
         if(checkSession.isEmpty()) { System.out.println("Session not found for the token"); return SessionStatus.INVALID; }
 
         // validating session
