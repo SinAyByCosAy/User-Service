@@ -3,6 +3,7 @@ package dev.tanay.userservice.services;
 import dev.tanay.userservice.dtos.*;
 import dev.tanay.userservice.models.*;
 import dev.tanay.userservice.repositories.JwtKeyRepository;
+import dev.tanay.userservice.repositories.RoleRepository;
 import dev.tanay.userservice.repositories.SessionRepository;
 import dev.tanay.userservice.repositories.UserRepository;
 import io.jsonwebtoken.Claims;
@@ -29,22 +30,31 @@ public class AuthService {
     private UserRepository userRepository;
     private SessionRepository sessionRepository;
     private JwtKeyRepository jwtKeyRepository;
+    private RoleRepository roleRepository;
     private PasswordEncoder passwordEncoder;
 
-    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, JwtKeyRepository jwtKeyRepository, PasswordEncoder passwordEncoder, ObjectMapper objectMapper){
+    public AuthService(
+            UserRepository userRepository,
+            SessionRepository sessionRepository,
+            JwtKeyRepository jwtKeyRepository,
+            PasswordEncoder passwordEncoder,
+            RoleRepository roleRepository){
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.jwtKeyRepository = jwtKeyRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
     @Transactional
     public UserDto signup(SignupRequestDto signupRequestDto){
         User checkUser = userRepository.findUserByEmail(signupRequestDto.getEmail());
         //throw error if user already exists
+        Role publicRole = roleRepository.findRoleByName("ROLE_PUBLIC");
 
         User newUser = new User();
         newUser.setEmail(signupRequestDto.getEmail());
         newUser.setPassword(passwordEncoder.encode(signupRequestDto.getPassword()));
+        newUser.getRoles().add(publicRole);
         userRepository.save(newUser);
 
         UserDto res = UserDto.from(newUser);
@@ -63,10 +73,14 @@ public class AuthService {
         MacAlgorithm alg = (MacAlgorithm) Jwts.SIG.get().get(keyEntity.getAlgorithm());
         SecretKey key = rebuildSecretKey(keyEntity);
 
+        List<String> roles = checkUser.getRoles()
+                .stream()
+                .map(Role :: getName)
+                .toList();
         Instant now = Instant.now();
         Map<String, Object> jsonForJwt = new HashMap<>();
-        jsonForJwt.put("email", checkUser.getEmail());
-        jsonForJwt.put("roles", checkUser.getRoles());
+        jsonForJwt.put("email", checkUser.getEmail()); //not needed
+        jsonForJwt.put("roles", roles);
 
         UUID sessionId = UUID.randomUUID(); //generated session id
 
