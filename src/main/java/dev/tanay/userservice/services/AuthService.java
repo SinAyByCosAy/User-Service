@@ -1,5 +1,6 @@
 package dev.tanay.userservice.services;
 
+import dev.tanay.userservice.MessageQueueConfig.UserEventPublisher;
 import dev.tanay.userservice.dtos.*;
 import dev.tanay.userservice.models.*;
 import dev.tanay.userservice.repositories.JwtKeyRepository;
@@ -32,18 +33,21 @@ public class AuthService {
     private JwtKeyRepository jwtKeyRepository;
     private RoleRepository roleRepository;
     private PasswordEncoder passwordEncoder;
+    private UserEventPublisher publisher;
 
     public AuthService(
             UserRepository userRepository,
             SessionRepository sessionRepository,
             JwtKeyRepository jwtKeyRepository,
             PasswordEncoder passwordEncoder,
-            RoleRepository roleRepository){
+            RoleRepository roleRepository,
+            UserEventPublisher publisher){
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.jwtKeyRepository = jwtKeyRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.publisher = publisher;
     }
     @Transactional
     public UserDto signup(SignupRequestDto signupRequestDto){
@@ -56,6 +60,14 @@ public class AuthService {
         newUser.setPassword(passwordEncoder.encode(signupRequestDto.getPassword()));
         newUser.getRoles().add(publicRole);
         userRepository.save(newUser);
+
+        publisher.publishUserCreated(
+                new EmailMessageDto(
+                        newUser.getId(),
+                        newUser.getEmail(),
+                        newUser.getEmail()
+                )
+        );
 
         UserDto res = UserDto.from(newUser);
         return res;
