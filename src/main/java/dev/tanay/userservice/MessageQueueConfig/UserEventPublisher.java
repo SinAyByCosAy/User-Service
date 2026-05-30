@@ -9,9 +9,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserEventPublisher {
     private final KafkaTemplate<String, EmailMessageDto> kafkaTemplate;
+    private static final String TOPIC = "user-signup-topic";
     public void publishUserCreated(EmailMessageDto msg){
         kafkaTemplate.send(
-                "user-signup-topic",
+                TOPIC,
                 msg.getEmail(),
                 msg
         );
