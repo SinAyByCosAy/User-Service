@@ -114,6 +114,11 @@
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
         </dependency>
+        <dependency>
+            <groupId>dev.tanay</groupId>
+            <artifactId>common-proto</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>

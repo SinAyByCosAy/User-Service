@@ -53,7 +53,7 @@ public class AuthService {
     public UserDto signup(SignupRequestDto signupRequestDto){
         User checkUser = userRepository.findUserByEmail(signupRequestDto.getEmail());
         //throw error if user already exists
-        Role publicRole = roleRepository.findRoleByName("ROLE_PUBLIC");
+        Role publicRole = roleRepository.findRoleByName("PUBLIC");
 
         User newUser = new User();
         newUser.setEmail(signupRequestDto.getEmail());
@@ -61,13 +61,7 @@ public class AuthService {
         newUser.getRoles().add(publicRole);
         userRepository.save(newUser);
 
-        publisher.publishUserCreated(
-                new EmailMessageDto(
-                        newUser.getId(),
-                        newUser.getEmail(),
-                        newUser.getEmail()
-                )
-        );
+        publisher.publishUserCreated(newUser);
 
         UserDto res = UserDto.from(newUser);
         return res;
